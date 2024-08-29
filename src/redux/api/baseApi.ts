@@ -8,6 +8,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../features/store";
 import { logOut, setUser } from "../features/auth/authSlice";
+import { toast } from "sonner";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:5000/api/v1",
@@ -27,10 +28,11 @@ const baseQueryWithRefreshToken: BaseQueryFn<
 > = async (args, api, extraOptions): Promise<any> => {
   let result = await baseQuery(args, api, extraOptions);
 
-  if (result.error?.status === "PARSING_ERROR") {
-    // Log the raw response for debugging
-    console.error('Raw response:', result.error.originalStatus);
+  if (result.error?.status === 404) {
+    toast.error(result.error.data.message);
+  }
 
+  if (result.error?.status === 401) {
     // Attempt to refresh the token
     const res = await fetch("http://localhost:5000/api/v1/auth/refresh-token", {
       method: "POST",
@@ -38,13 +40,13 @@ const baseQueryWithRefreshToken: BaseQueryFn<
     });
 
     if (!res.ok) {
-      console.error('Failed to refresh token:', res.statusText);
+      console.error("Failed to refresh token:", res.statusText);
       api.dispatch(logOut());
       return result;
     }
 
     const data = await res.json().catch((err) => {
-      console.error('Failed to parse JSON response:', err);
+      console.error("Failed to parse JSON response:", err);
       return null;
     });
 

@@ -1,3 +1,4 @@
+import { Form } from "antd";
 import { ReactNode } from "react";
 import {
   FieldValues,
@@ -13,18 +14,28 @@ type TPHFrom = {
 
 interface FormDefaults {
   defaultValues?: Record<string, any>;
+  resolver?: any;
 }
 
-const PHFrom = ({ onSubmit, children, defaultValues }: TPHFrom) => {
+const PHFrom = ({ onSubmit, children, defaultValues, resolver }: TPHFrom) => {
   const fromDefault: FormDefaults = {};
   if (defaultValues) {
-    fromDefault.defaultValues = defaultValues;
+    fromDefault["defaultValues"] = defaultValues;
+  }
+  if (resolver) {
+    fromDefault["resolver"] = resolver;
   }
 
   const methods = useForm(fromDefault);
+  const submit: SubmitHandler<FieldValues> = (data) => {
+    onSubmit(data);
+    methods.reset();
+  };
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>{children}</form>
+      <Form layout="vertical" onFinish={methods.handleSubmit(submit)}>
+        {children}
+      </Form>
     </FormProvider>
   );
 };
