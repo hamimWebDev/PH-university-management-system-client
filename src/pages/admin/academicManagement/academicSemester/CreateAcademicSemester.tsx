@@ -15,7 +15,6 @@ const CreateAcademicSemester = () => {
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     const tostId = toast.loading("Creating...");
     const name = semesterOption[Number(data.name) - 1].label;
-    console.log(name);
     const semesterData = {
       name,
       code: data.name,

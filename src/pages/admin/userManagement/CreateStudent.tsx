@@ -9,8 +9,10 @@ import {
   useGetAllSemesterQuery,
 } from "../../../redux/features/admin/academicManagementApi";
 import { useAddStudentMutation } from "../../../redux/features/admin/userManagementApi";
+import { toast } from "sonner";
+import { TResponse } from "../../../types/global";
 
-const studentDummyData = {
+export const studentDummyData = {
   password: "student123",
   student: {
     // personal INFO
@@ -79,22 +81,21 @@ const bloodGroupOption = [
 ];
 
 const CreateStudent = () => {
-  const [addStudent, { data, error }] = useAddStudentMutation();
-  console.log(data);
-  console.log(error);
+  const [addStudent] = useAddStudentMutation();
+
   const { data: SData } = useGetAllSemesterQuery(undefined);
   const { data: DPData } = useGetAllDepartmentQuery(undefined);
-  const semesterOption = SData?.data?.map((item) => ({
+  const semesterOption = SData?.data?.map((item: any) => ({
     value: item._id,
     label: `${item.name} ${item.year}`,
   }));
 
-  const departmentOption = DPData?.data?.map((item) => ({
+  const departmentOption = DPData?.data?.map((item: any) => ({
     value: item._id,
     label: `${item.name}`,
   }));
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     const studentData = {
       password: "student123",
       student: data,
@@ -102,7 +103,19 @@ const CreateStudent = () => {
     const formData = new FormData();
     formData.append("data", JSON.stringify(studentData));
     formData.append("file", data.image);
-    addStudent(formData);
+
+    const tostId = toast.loading("Creating...");
+
+    try {
+      const res = (await addStudent(formData)) as TResponse;
+      if (res.error) {
+        toast.error(res?.error?.data?.message, { id: tostId });
+      } else {
+        toast.success("student Created", { id: tostId });
+      }
+    } catch (err) {
+      toast.error("Something went wrong", { id: tostId });
+    }
   };
   return (
     <Row>
